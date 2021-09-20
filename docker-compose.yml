@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  dynamo:
+    container_name: local-dynamodb
+    image: amazon/dynamodb-local
+    networks:
+      - local-dynamodb
+    ports:
+      - "8000:8000"
+    volumes:
+      - dynamodata:/home/dynamodblocal/db
+    working_dir: /home/dynamodblocal
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/db"]
+
+  ruby_dev:
+    build: .
+    container_name: ally_container
+    ports:
+      - "3000:3000"
+    networks:
+      - local-dynamodb
+    volumes:
+      - ./mycode:/home/app
+    environment:
+      DYNAMODB_ENDPOINT: http://dynamo:8000
+      AWS_ACCESS_KEY_ID: 'EXAMPLEID'
+      AWS_SECRET_ACCESS_KEY: 'EXAMPLEKEY'
+      AWS_DEFAULT_REGION: 'us-west-2'
+      CONSUMER_KEY: "${CONSUMER_KEY}"
+      CONSUMER_SECRET: "${CONSUMER_SECRET}"
+      ACCESS_TOKEN: "${ACCESS_TOKEN}"
+      ACCESS_TOKEN_SECRET: "${ACCESS_TOKEN_SECRET}"
+    
+networks:
+  local-dynamodb:
+    name: local-dynamodb
+
+volumes:
+  dynamodata:
+    driver: local
